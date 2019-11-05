@@ -1,0 +1,17 @@
+				Some Useful Links:
+
+Dataset:
+
+https://archive.ics.uci.edu/ml/datasets/Sentiment+Labelled+Sentences#
+
+Naive Bayes and Text Classification
+
+https://sebastianraschka.com/Articles/2014_naive_bayes_1.html
+https://web.stanford.edu/class/cs124/lec/naivebayes.pdf
+https://medium.com/@theflyingmantis/text-classification-in-nlp-naive-bayes-a606bf419f8c
+
+Bag-of-words and feature extraction
+
+https://www.linkedin.com/pulse/text-classification-using-bag-words-approach-nltk-scikit-rajendran/
+https://machinelearningmastery.com/gentle-introduction-bag-words-model/
+https://machinelearningmastery.com/prepare-text-data-machine-learning-scikit-learn/
