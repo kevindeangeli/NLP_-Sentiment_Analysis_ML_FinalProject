@@ -1,5 +1,5 @@
 '''
-Created by Kevin De Angeli
+Created by Kevin De Angeli & Hector D. Ortiz-Melendez
 Date: 2019-11-24
 '''
 
