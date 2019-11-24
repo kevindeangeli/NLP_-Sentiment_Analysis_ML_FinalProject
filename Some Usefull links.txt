@@ -1,7 +1,7 @@
 				Some Useful Links:
 
 Dataset:
-Hector
+Hector merge
 Kevin
 https://archive.ics.uci.edu/ml/datasets/Sentiment+Labelled+Sentences#
 
