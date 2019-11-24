@@ -1,7 +1,12 @@
 				Some Useful Links:
 
 Dataset:
+<<<<<<< HEAD
 
+=======
+Hector merge
+Kevin
+>>>>>>> 8de87a65123d1c5688187ef85db295dd0b3a9198
 https://archive.ics.uci.edu/ml/datasets/Sentiment+Labelled+Sentences#
 
 Naive Bayes and Text Classification
