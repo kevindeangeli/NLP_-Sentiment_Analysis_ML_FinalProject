@@ -94,6 +94,8 @@ def main():
     amazon= 'Data/amazon_cells_labelled.txt'
     yelp = 'Data/yelp_labelled.txt'
 
+
+    
     data = [imdb, amazon, yelp]
     for dat in data:
         X, Y = readData(dat)
@@ -111,6 +113,7 @@ def main():
         
     
 #    pdb.set_trace()
+
 
 
 if __name__ == "__main__":
