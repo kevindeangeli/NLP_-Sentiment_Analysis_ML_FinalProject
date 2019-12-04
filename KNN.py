@@ -5,7 +5,7 @@ Date: 2019-12-03
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 
 class Knn:
     def __init__(self):
@@ -21,8 +21,6 @@ class Knn:
     def fit(self, X, y):
         #self.nX = normalization(X)
         self.nX = X
-        self.pX = pca(self.nX)
-        self.fX = fld(self.nX,y)
         self.y = y
 
     #x here is just a point
@@ -44,7 +42,7 @@ class Knn:
 
 
     #x here is just a point
-    def guessLabel(self,x, X, k):
+    def predict(self,x, X, k):
         label0 = 0
         guessClass = -1
         label1 = 0
@@ -73,7 +71,7 @@ class Knn:
         guessedLabel = -1
         #print(XTest)
         for row in XTest:
-            guessedLabel = self.guessLabel(row, X, k)
+            guessedLabel = self.predict(row, X, k)
             guessList.append(guessedLabel)
         return guessList
 
@@ -85,12 +83,6 @@ class Knn:
         #print(XTest)
         if data == "nX":
             self.predictionArr = self.knn(XTest, self.nX, k)
-        elif data == "pX":
-            XTest = pca(XTest)
-            self.predictionArr = self.knn(XTest, self.pX, k)
-        else:
-            XTest=fld(XTest, training=False)
-            self.predictionArr = self.knn(XTest, self.fX, k)
         #print(self.predictionArr)
         self.totalTime= time.time() - start_time
         return  self.predictionArr
