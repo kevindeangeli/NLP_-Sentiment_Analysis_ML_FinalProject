@@ -8,6 +8,7 @@ from KNN import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+import time
 from sklearn.metrics import confusion_matrix #To compute the confusion matrix.
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer #Bag-of-words/TF-IDF (Feature Extraction)
 from sklearn import svm #Support Vector Machine
@@ -18,6 +19,10 @@ from sklearn.neural_network import MLPClassifier #For BPNN
 from sklearn.model_selection import KFold #to split the data
 from sklearn.ensemble import RandomForestClassifier #RnadomForest
 from sklearn.datasets import make_classification #For randomForests
+from sklearn.linear_model import LogisticRegression #For Classifier fussion
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import VotingClassifier
+
 from sklearn.utils import shuffle #To shuffle the data when we merge the three subsets.
 
 def readData(path):
@@ -123,10 +128,11 @@ def threeVsAll(data):
     #    pdb.set_trace()
 
 
-def crossValidationExample(data, classifierClass):
+def crossValidationExample(X,Y, classifierClass):
     #This is an example of how you do k-fold cross validation.
-    X, Y = readData(data)
-    X = TF_IDF(X)
+    #X, Y = readData(data)
+    timeStart = time.time()
+    X = BoW(X)
     kf = KFold(n_splits=10) # Split the data into 10 subsets.
     kf.get_n_splits(X)
     accuracy = []
@@ -138,8 +144,8 @@ def crossValidationExample(data, classifierClass):
         clf.fit(X_train, y_train)
         y_predict = clf.predict(X_test)
         accuracy.append(accuracy_score(y_test, y_predict))
-
-    print(accuracy)
+    print("--- %s seconds ---" % (time.time() - timeStart))
+    #print(accuracy)
     print(np.mean(accuracy))
 
 
@@ -160,12 +166,13 @@ def mergeDatasets(data):
     return X_all, Y_all
 
 def plotConfusionMatrix(y_predict, y_test):
+    plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
     labels = [1, 0]
     cm = confusion_matrix(y_test, y_predict, labels)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     cax = ax.matshow(cm)
-    plt.title('Confusion matrix of the classifier')
+    #plt.title('Confusion matrix of the classifier')
     fig.colorbar(cax)
     ax.set_xticklabels([''] + labels)
     ax.set_yticklabels([''] + labels)
@@ -173,11 +180,109 @@ def plotConfusionMatrix(y_predict, y_test):
     plt.ylabel('True')
     plt.show()
 
+
+
+def NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test):
+    #Note: The array of neurons and the array of hl should be the same
+    #The program can be modified so it can take arbitrary numbers.
+    neurons = np.arange(1, 10)  # Controls number of neurons in all layers.
+    hl = np.arange(1,10)  # Controls number of layers
+    network = []
+    #network.append(784)
+    #test = list(test_data)
+    #network.append(1)
+    accuracy =  np.zeros([hl.shape[0],neurons.shape[0]])
+    for i in hl:
+        network.append(1)
+        for n in neurons:
+            for k in range(len(network)):
+                network[k] = n
+            print("Network Architecture Being used: ",network)
+            clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=tuple(network), random_state=1)
+            clf.fit(X_train, y_train)
+            y_guess = clf.predict(X_test)
+            [coef.shape for coef in clf.coefs_]
+            acc= accuracy_score(y_test, y_guess)
+            acc = np.round_(acc,decimals=2)
+            accuracy[hl.shape[0]-i][n-1] = acc
+
+
+    print(accuracy)
+
+    #Note: The heat map fuction displays the graph in the exact order as the
+    #Matrix. So I had to populate the matrix in the opposite order
+    left = neurons[0] - .5  # Should be set so that it starts a the first point in the array -.5
+    right = neurons[-1] + .5  # last number of the array +.5
+    bottom = hl[0] - .5
+    top = hl[-1] + .5
+    extent = [left, right, bottom, top]
+
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
+    im = ax.imshow(accuracy, extent=extent, interpolation='nearest')
+    ax.set(xlabel='Number of Neurons', ylabel='Number of Layers')
+
+    #Label each square in the heat map:
+    for i in range(len(hl)):
+        for j in range(len(neurons)):
+            text = ax.text(j + 1, i + 1, accuracy[accuracy.shape[0]-i-1,j],
+                           ha="center", va="center", color="w")
+
+    plt.show()
+
+
+def classifierFussion(data):
+    clf1 = LogisticRegression(random_state=1)
+    clf2 = RandomForestClassifier(n_estimators=50, random_state=1)
+    clf3 = GaussianNB()
+    for dat in data:
+        X, Y = readData(dat)
+        Xv1 = BoW(X)
+        Xv2 = TF_IDF(X)
+        featEx = [Xv1, Xv2, 'BoW', 'TF_IDF']
+        count = 1
+        for Xv in featEx[0:2]:
+            count += 1
+            X_train, X_test, y_train, y_test = splitData(Xv, Y)
+            eclf1 = VotingClassifier(estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)], voting='hard')
+            timeStart = time.time()
+            eclf1 = eclf1.fit(X_train, y_train)
+            y_predict = eclf1.predict(X_test)
+
+            print('Data:', dat, '\nFeature Extraction:', featEx[count],accuracy_score(y_test, y_predict))
+            print("--- %s seconds ---" % (time.time() - timeStart))
+            print(" ")
+
+    X, Y = mergeDatasets(data)
+    Xv1 = BoW(X)
+    X_train, X_test, y_train, y_test = splitData(Xv1, Y)
+    eclf1 = VotingClassifier(estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)], voting='hard')
+    timeStart = time.time()
+    eclf1 = eclf1.fit(X_train, y_train)
+    y_predict = eclf1.predict(X_test)
+    print('Data: All-Three', '\nFeature Extraction:BoW', accuracy_score(y_test, y_predict))
+    print("--- %s seconds ---" % (time.time() - timeStart))
+    print(" ")
+
+    Xv2 = TF_IDF(X)
+    X_train, X_test, y_train, y_test = splitData(Xv2, Y)
+    eclf1 = VotingClassifier(estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)], voting='hard')
+    timeStart = time.time()
+    eclf1 = eclf1.fit(X_train, y_train)
+    y_predict = eclf1.predict(X_test)
+    print('Data: All-Three', '\nFeature Extraction:= TF-IDF', accuracy_score(y_test, y_predict))
+    print("--- %s seconds ---" % (time.time() - timeStart))
+    print(" ")
+
+
+###########################################################################
+####################### Main Starts Here  #################################
+###########################################################################
+
 def main():
-    imdb= 'Data/imdb_labelled.txt'
     amazon= 'Data/amazon_cells_labelled.txt'
+    imdb= 'Data/imdb_labelled.txt'
     yelp = 'Data/yelp_labelled.txt'
-    data = [imdb, amazon, yelp]
+    data = [amazon, imdb, yelp]
 
 
     #threeVsAll(data) # Function from Milestone 3 to compute initial results
@@ -186,18 +291,43 @@ def main():
 
 
 
-    # X, Y = readData(imdb) #Random Forest does a little bit better than Decision Trees
-    # X = TF_IDF(X)
-    # X_train, X_test, y_train, y_test = splitData(X, Y)
-    # randomForest(X_train, X_test, y_train, y_test)
+    '''
+    #This is to make the accuracy tables. Make sure to check what type of 
+    #features are being used in the function crossValidationExample (bow or tf-dif).
+    
+    #X,Y = readData(yelp) # one dataset at the time
+    X, Y = mergeDatasets(data) #all three combined 
+    crossValidationExample(X=X,Y=Y, classifierClass=RandomForestClassifier( random_state=0)) #Give the dataset and the classifier ;)
+    '''
 
 
-    # X, Y = mergeDatasets(data)
-    # X = TF_IDF(X)
-    # X_train, X_test, y_train, y_test = splitData(X, Y)
-    # randomForest(X_train, X_test, y_train, y_test)
+
+    '''
+    #This was used to plot the confusion matrix
+    
+    X,Y = readData(amazon) # one dataset at the time
+    #X, Y = mergeDatasets(data) #all three combined
+    X = BoW(X)
+    #X = TF_IDF(X)
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,5), random_state=1)
+    clf.fit(X_train, y_train)
+    prediction = clf.predict(X_test)
+    plotConfusionMatrix(prediction, y_test)
+    '''
 
 
+
+    '''
+    #This code is to create the heat map with the neuronsVsLayers.
+    
+    X,Y = readData(amazon) # one dataset at the time
+    X = TF_IDF(X)
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
+    '''
+
+    classifierFussion(data)
 
 if __name__ == "__main__":
     main()
