@@ -6,6 +6,7 @@ Date: 2019-12-02
 import numpy as np
 from Distances import *
 
+
 class mpp:
    def __init__(self, case=1):
       # init prior probability, equal distribution
@@ -17,7 +18,7 @@ class mpp:
       self.case_ = case
       self.pw_ = None
 
-   def fit(self, Tr, y, fX=False):
+   def fit(self, Tr, y):
       # derive the model
       self.covs_, self.means_ = {}, {}
       self.covsum_ = None
@@ -34,15 +35,11 @@ class mpp:
          else:
             self.covsum_ += self.covs_[c]
 
-      if fX == False:
-         # used by case II
-         self.covavg_ = self.covsum_ / self.classn_
+      # used by case II
+      self.covavg_ = self.covsum_ / self.classn_
 
-         # used by case I
-         self.varavg_ = np.sum(np.diagonal(self.covavg_)) / len(self.classes_)
-      else:
-         self.covavg_ = np.std(Tr)
-         self.varavg = np.var(Tr)
+      # used by case I
+      self.varavg_ = np.sum(np.diagonal(self.covavg_)) / len(self.classes_)
 
    def predict(self, T):
       # eval all data
@@ -50,14 +47,21 @@ class mpp:
       disc = np.zeros(self.classn_)
       nr, _ = T.shape
 
+
       if self.pw_ is None:
-         self.pw_ = np.full(self.classn_, 1 / self.classn_)
+         self.pw_ = np.full(self.classn_, 1 / self.classn_) #Equal Prior probability
+      #print(self.pw)
 
       for i in range(nr):
          for c in self.classes_:
             if self.case_ == 1:
                edist2 = euc2(self.means_[c], T[i])
-               disc[c] = -edist2 / (2 * self.varavg_) + np.log(self.pw_[c])
+               prior = self.pw[c]
+               prior = np.log(prior)
+               disc[c] = -edist2 / (2 * self.varavg_) + prior     #np.log(self.pw_[c])
+               #print(disc[c])
+
+
             elif self.case_ == 2:
                mdist2 = mah2(self.means_[c], T[i], self.covavg_)
                disc[c] = -mdist2 / 2 + np.log(self.pw_[c])

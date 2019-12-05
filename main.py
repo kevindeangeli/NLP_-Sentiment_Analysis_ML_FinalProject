@@ -274,6 +274,41 @@ def classifierFussion(data):
     print(" ")
 
 
+
+def gaussianPriorProbsAnalysis(data, bow = True):
+    if len(data) == 3:
+        X, Y = mergeDatasets(data)  # all three combined
+    else:
+        X, Y = readData(data)  # one dataset at the time
+
+    if bow:
+        X = BoW(X)
+    else:
+        X= TF_IDF(X)
+
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+    priors=np.linspace(0.1, 1, 100) #log(0) DNE
+    ws = [0,0]
+    acc = []
+    for w in priors:
+        ws[0] = w
+        ws[1] = 1-w+.000001
+        gaussian = mpp(1)
+        gaussian.pw = ws
+        gaussian.fit(X_train, y_train)
+        prediction = gaussian.predict(X_test)
+        acc.append(accuracy_score(y_test, prediction))
+
+    print(acc)
+    plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
+    plt.plot(priors, acc)
+    plt.xlabel(xlabel='W1 (Prior Probability)')
+    plt.ylabel(ylabel='Accuracy')
+    plt.savefig('Images/priorProbs/example.png')
+
+    #plt.show()
+
+
 ###########################################################################
 ####################### Main Starts Here  #################################
 ###########################################################################
@@ -288,18 +323,18 @@ def main():
     #threeVsAll(data) # Function from Milestone 3 to compute initial results
     #gaussian(imdb) #Case 1 works and gives bad accuracy (50%). Case II, and III don't work because of singular matrix when taking the inverse.
     #crossValidationExample(amazon, classifierClass=tree.DecisionTreeClassifier()) #Give the dataset and the classifier ;)
-
+    #gaussianPriorProbsAnalysis(data, False) #False for TFIDF, True for BoW
+    #classifierFussion(data)
 
 
     '''
     #This is to make the accuracy tables. Make sure to check what type of 
     #features are being used in the function crossValidationExample (bow or tf-dif).
-    
+
     #X,Y = readData(yelp) # one dataset at the time
     X, Y = mergeDatasets(data) #all three combined 
     crossValidationExample(X=X,Y=Y, classifierClass=RandomForestClassifier( random_state=0)) #Give the dataset and the classifier ;)
     '''
-
 
 
     '''
@@ -327,7 +362,7 @@ def main():
     NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
     '''
 
-    classifierFussion(data)
+
 
 if __name__ == "__main__":
     main()
