@@ -7,8 +7,10 @@ from GaussianClassifiers import *
 from KNN import *
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
 
 import time
+
 from sklearn.metrics import confusion_matrix #To compute the confusion matrix.
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer #Bag-of-words/TF-IDF (Feature Extraction)
 from sklearn import svm #Support Vector Machine
@@ -180,6 +182,36 @@ def plotConfusionMatrix(y_predict, y_test):
     plt.ylabel('True')
     plt.show()
 
+def plotAmazonCM():
+    plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
+    labels = [1, 0]
+#    cm = confusion_matrix(y_test, y_predict, labels)
+    
+    # Amazon
+    AmazonCMbow = [83, 78, 20, 149]
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(AmazonCMbow)
+    #plt.title('Confusion matrix of the classifier')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+
+    AmazonCMtf = [108, 53, 30, 139]
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(AmazonCMtf)
+    #plt.title('Confusion matrix of the classifier')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
 
 
 def NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test):
@@ -308,6 +340,31 @@ def gaussianPriorProbsAnalysis(data, bow = True):
 
     #plt.show()
 
+def knnStudy(dat, X,Y, merged=False):
+        Xv1 = BoW(X)
+        Xv2 = TF_IDF(X)
+        featEx = [Xv1, Xv2, 'BoW', 'TF_IDF']
+        count = 1
+        for Xv in featEx[0:2]:
+            count += 1
+            X_train, X_test, y_train, y_test = splitData(Xv, Y)
+#            accSVM = SVM(X_train, X_test, y_train, y_test)
+#            accBPNN = BPNN(X_train, X_test, y_train, y_test)
+#            accDT = DecisionTree(X_train, X_test, y_train, y_test)
+            
+            
+            for k in range(1,10):
+
+                start = time.time()
+
+                Acc, TPR, TNR = knn(X_train, X_test, y_train, y_test, k)
+
+                end = time.time()
+
+                if merged == False:
+                    print('Data:', dat, '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
+                else:
+                    print('Data: Merged Data ', '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
 
 ###########################################################################
 ####################### Main Starts Here  #################################
@@ -334,10 +391,10 @@ def main():
     #X,Y = readData(yelp) # one dataset at the time
     X, Y = mergeDatasets(data) #all three combined 
     crossValidationExample(X=X,Y=Y, classifierClass=RandomForestClassifier( random_state=0)) #Give the dataset and the classifier ;)
-    '''
+    
 
 
-    '''
+    
     #This was used to plot the confusion matrix
     
     X,Y = readData(amazon) # one dataset at the time
@@ -349,18 +406,27 @@ def main():
     clf.fit(X_train, y_train)
     prediction = clf.predict(X_test)
     plotConfusionMatrix(prediction, y_test)
-    '''
+    
 
 
 
     '''
     #This code is to create the heat map with the neuronsVsLayers.
     
-    X,Y = readData(amazon) # one dataset at the time
-    X = TF_IDF(X)
-    X_train, X_test, y_train, y_test = splitData(X, Y)
-    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
-    '''
+#    X,Y = readData(amazon) # one dataset at the time
+#    X = TF_IDF(X)
+#    X_train, X_test, y_train, y_test = splitData(X, Y)
+#    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
+
+    
+    # KNN individual data
+    for dat in data:
+        X, Y = readData(dat)
+        knnStudy(dat, X, Y)
+    
+    # KNN merged data
+    X, Y = mergeDatasets(data)
+    knnStudy('ignore', X, Y, True)
 
 
 
