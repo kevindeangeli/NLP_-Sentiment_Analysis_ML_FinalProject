@@ -3,103 +3,149 @@ Created by Kevin De Angeli
 Date: 2019-12-03
 '''
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from statistics import mean
+#from scipy import integrate
+from numpy import array
+from numpy import cov
+#from scipy.stats import multivariate_normal
+import matplotlib.pyplot as plt
+import sympy as sym
+from sympy.matrices import MatrixSymbol, Transpose
+from sympy.functions import transpose
+from sympy import symbols, Eq, solve, nsolve
+import math
+from mpmath import *
+import pdb
+import matplotlib.cm as cm
+import matplotlib.cbook as cbook
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+from Distances import *
+
+import operator
 import time
 
-class Knn:
-    def __init__(self):
-        self.nX = []
-        self.pX = []
-        self.fX = []
-        self.predictionArr =[]
-        self.totalTime= -1
+def knn(nXtrain, nXtest, y_train, y_test, k):
 
-    def showTime(self):
-        print("Time in seconds: ", self.totalTime)
+    
+    A0 = 1
+    A1 = 1
 
-    def fit(self, X, y):
-        #self.nX = normalization(X)
-        self.nX = X
-        self.y = y
+    knn         = []
 
-    #x here is just a point
-    def euclidian_dsitanceList(self, x, X):
-        # x is the test point, X is the dataset
-        # Using Euclidian Distance
-        distancesArr = []
-        # For each row in the data set:
-        dist = -1
-        index=0 # used to associate a distance with a y.
-        for row in X:
-            testPoint = row[0:X.shape[1]]
-            dist = np.linalg.norm(testPoint - x)
-            labelIndex = self.y[index]
-            distanceAndLabel = (dist, labelIndex)
-            distancesArr.append(distanceAndLabel)
-            index +=1
-        return distancesArr
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
+
+    rowTe       = len(nXtest)
+    columns     = len(nXtest[0])-1
+
+    #    classes     = nXtest[:,-1]
+    #    guesses     = nXtrain[:,-1]
+    classes     = y_test
+    guesses     = y_train
 
 
-    #x here is just a point
-    def predict(self,x, X, k):
+    for row in range(rowTe):
+        
+
+        distances       = []
+
+        for x in range(len(nXtrain)):
+
+            diff = nXtest[row] - nXtrain[x]
+            
+            dist = np.dot(diff, diff)
+
+            distances.append((dist,guesses[x]))
+        
+
+        #print(distances)
+        distances.sort(key=operator.itemgetter(0))
+        
+        for K in range(k):
+            knn.append(distances[K][1])
+
+
         label0 = 0
-        guessClass = -1
         label1 = 0
-        ks = []
-        distancesArr = self.euclidian_dsitanceList(x, X)
-        distancesArr.sort()
-        for p in range(int(k)):
-            minimum = min(distancesArr)
-            ks.append((minimum[0], minimum[1]))
-            distancesArr.remove(minimum)
-        for q in range(len(ks)):
-            if ks[q][1] == 0:
-                label0 += 1
-            else:
-                label1 += 1
-        if label0 >= label1:
-            guessClass = 0
+       
+        for K in knn:
+           if K == 0:
+               label0 += 1
+           else:
+               label1 += 1
+
+        if (A0 == 1 and A1 == 1):
+           if label0 > label1:
+               guess = 0
+           else:
+               guess = 1
         else:
-            guessClass = 1
-        return guessClass
+           # prior chosen
+           ca0      = label0 * A0 / k
+           ca1      = label1 * A1 / k
+
+           if ca0 > ca1:
+               guess = 0
+           else:
+               guess = 1
+         
+
+        if   (guess == 1 and classes[row] == 1):
+           # True Positive
+           TP += 1
+            
+        elif (guess == 0 and classes[row] == 1):
+           # False Negative
+           FN += 1
+            
+        elif (guess == 1 and classes[row] == 0):
+           # False Positive
+           FP += 1
+
+        elif (guess == 0 and classes[row] == 0):
+           # True Negative
+           TN += 1
 
 
-    def knn(self,XTest, X, k):
-        #X is the training data
-        guessList =[]
-        guessedLabel = -1
-        #print(XTest)
-        for row in XTest:
-            guessedLabel = self.predict(row, X, k)
-            guessList.append(guessedLabel)
-        return guessList
+        knn     = []
 
 
+    Acc = (TP + TN) / (TP + TN + FP + FN)
+    TPR = TP / (TP + FN)    # sensitivty
+    FPR = FP / (FP + TN)
 
-    def predict(self, XTest, k=1, data="nX"):
-        start_time = time.time()
-        predictionArr =[]
-        #print(XTest)
-        if data == "nX":
-            self.predictionArr = self.knn(XTest, self.nX, k)
-        #print(self.predictionArr)
-        self.totalTime= time.time() - start_time
-        return  self.predictionArr
+    TNR = 1 - FPR           # specificity
+    FNR = 1 - TPR
 
-    def performanceCurve(self, X_test,ytest, K, data="fX"):
-        k = np.arange(1, K+1, 1).tolist()
-        accuracy_list = []
-        for i in k:
-            array_prediction=self.predict(X_test, i, data)
-            accuracy_list.append(accuracy_score(ytest,array_prediction,showResults=False))
-        #print(accuracy_list)
-        print("Maximum Accuracy is obtained when K=", k[np.argmax(accuracy_list)])
-        print("The accuracy associated with that K = ", np.amax(accuracy_list))
-        plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
-        plt.plot(k, accuracy_list)
-        plt.legend(loc='best')
-        plt.xlabel('K')
-        plt.ylabel('Accuracy')
-        plt.show()
+    #    print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
 
+    #    print('kNN Accuracy: ' , Acc)
+    #    print('TPR,TNR',TPR,TNR)
+    
+    '''
+#    print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
+#    print('K:',k,'Accuracy:' , Acc)
+#    print('sensitivity,specificity',TPR,TNR)
+    '''
+    print(TPR,FPR)
+
+
+#    if (A0 == 1 and A1 == 1):
+#       if k == 1:
+#           print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
+#           print('K:',k,'Accuracy:' , Acc)
+#           print('sensitivity,specificity',TPR,TNR)
+#       elif k == 10:
+#           print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
+#           print('K:',k,'Max Accuracy:' , Acc)
+#           print('sensitivity,specificity',TPR,TNR)
+
+
+          
+    return Acc, TPR, TNR

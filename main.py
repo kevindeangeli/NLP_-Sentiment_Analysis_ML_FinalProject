@@ -5,7 +5,6 @@ Date: 2019-11-24
 
 from GaussianClassifiers import *
 from KNN import *
-import numpy as np
 import matplotlib.pyplot as plt
 from K_means import *
 
@@ -19,11 +18,9 @@ from sklearn import tree #Decision Trees
 from sklearn.neural_network import MLPClassifier #For BPNN
 from sklearn.model_selection import KFold #to split the data
 from sklearn.ensemble import RandomForestClassifier #RnadomForest
-from sklearn.datasets import make_classification #For randomForests
 from sklearn.linear_model import LogisticRegression #For Classifier fussion
 from sklearn.naive_bayes import GaussianNB # For classifier fussion
 from sklearn.ensemble import VotingClassifier  #For classifier fussion.
-
 from sklearn.utils import shuffle #To shuffle the data when we merge the three subsets.
 
 def readData(path):
@@ -57,18 +54,12 @@ def BoW(X):
     vectorizer = CountVectorizer()
     Xv = vectorizer.fit_transform(X)
     X_bow = Xv.toarray()
-
-#    numpy.set_printoptions(threshold=sys.maxsize)
-#    with open('junk', 'w') as f:
-#        for item in my_list:
-#            f.write("%s\n" % item)
     return X_bow
 
 def TF_IDF(X):
     vectorizer = TfidfVectorizer()
     Xv = vectorizer.fit_transform(X)
     X_TFIDF = Xv.toarray()
-
     return X_TFIDF
     
 def splitData(X,y,testSize=0.33):
@@ -183,6 +174,36 @@ def plotConfusionMatrix(y_predict, y_test):
     plt.ylabel('True')
     plt.show()
 
+def plotAmazonCM():
+    plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
+    labels = [1, 0]
+#    cm = confusion_matrix(y_test, y_predict, labels)
+    
+    # Amazon
+    AmazonCMbow = [83, 78, 20, 149]
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(AmazonCMbow)
+    #plt.title('Confusion matrix of the classifier')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+
+    AmazonCMtf = [108, 53, 30, 139]
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(AmazonCMtf)
+    #plt.title('Confusion matrix of the classifier')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
 
 
 def NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test):
@@ -311,6 +332,35 @@ def gaussianPriorProbsAnalysis(data, bow = True):
 
     #plt.show()
 
+def knnStudy(dat, X, Y, ks, ke, merged=False):
+        Xv1 = BoW(X)
+        Xv2 = TF_IDF(X)
+        featEx = [Xv1, Xv2, 'BoW', 'TF_IDF']
+        count = 1
+        
+        print('TPR', 'FPR')
+
+        for Xv in featEx[0:2]:
+            count += 1
+            X_train, X_test, y_train, y_test = splitData(Xv, Y)
+#            accSVM = SVM(X_train, X_test, y_train, y_test)
+#            accBPNN = BPNN(X_train, X_test, y_train, y_test)
+#            accDT = DecisionTree(X_train, X_test, y_train, y_test)
+            
+            if merged == False:
+                print('Data:', dat, '\nFeature Extraction:', featEx[count],"\n")
+            else:
+                print('Data: Merged Data ', '\nFeature Extraction:', featEx[count], '\nKNN', "\n")
+            
+
+            for k in range(ks,ke+1):
+
+                start = time.time()
+                
+                Acc, TPR, TNR = knn(X_train, X_test, y_train, y_test, k)
+
+                end = time.time()
+
 
 def showConfusionMatrix(data, classifierClass):
     X, Y = readData(data)  # one dataset at the time
@@ -367,10 +417,10 @@ def main():
     #X,Y = readData(yelp) # one dataset at the time
     X, Y = mergeDatasets(data) #all three combined 
     crossValidationExample(X=X,Y=Y, classifierClass=RandomForestClassifier( random_state=0)) #Give the dataset and the classifier ;)
-    '''
+    
 
 
-    '''
+    
     #This was used to plot the confusion matrix
     
     X,Y = readData(amazon) # one dataset at the time
@@ -382,18 +432,28 @@ def main():
     clf.fit(X_train, y_train)
     prediction = clf.predict(X_test)
     plotConfusionMatrix(prediction, y_test)
-    '''
+    
 
 
 
     '''
     #This code is to create the heat map with the neuronsVsLayers.
     
-    X,Y = readData(amazon) # one dataset at the time
-    X = TF_IDF(X)
-    X_train, X_test, y_train, y_test = splitData(X, Y)
-    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
-    '''
+#    X,Y = readData(amazon) # one dataset at the time
+#    X = TF_IDF(X)
+#    X_train, X_test, y_train, y_test = splitData(X, Y)
+#    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
+
+    kstart  = 1
+    kend    = 10
+    # KNN individual data
+    for dat in data:
+        X, Y = readData(dat)
+        knnStudy(dat, X, Y, kstart, kend)
+    
+    # KNN merged data
+    X, Y = mergeDatasets(data)
+    knnStudy('ignore', X, Y, kstart, kend, True)
 
     '''
     #This code runs KNN
