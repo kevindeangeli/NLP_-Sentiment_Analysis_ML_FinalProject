@@ -16,7 +16,7 @@ class mpp:
       # self.covs, self.means, self.covavg, self.varavg = \
       #     self.train(self.train_data, self.classes)
       self.case_ = case
-      self.pw_ = None
+      self.pw_ = [0.5,0.5]
 
    def fit(self, Tr, y):
       # derive the model
@@ -56,7 +56,7 @@ class mpp:
          for c in self.classes_:
             if self.case_ == 1:
                edist2 = euc2(self.means_[c], T[i])
-               prior = self.pw[c]
+               prior = .5
                prior = np.log(prior)
                disc[c] = -edist2 / (2 * self.varavg_) + prior     #np.log(self.pw_[c])
                #print(disc[c])

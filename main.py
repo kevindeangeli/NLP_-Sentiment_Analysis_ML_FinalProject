@@ -7,8 +7,9 @@ from GaussianClassifiers import *
 from KNN import *
 import numpy as np
 import matplotlib.pyplot as plt
+from K_means import *
 
-import time
+import time #For computing time
 from sklearn.metrics import confusion_matrix #To compute the confusion matrix.
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer #Bag-of-words/TF-IDF (Feature Extraction)
 from sklearn import svm #Support Vector Machine
@@ -20,8 +21,8 @@ from sklearn.model_selection import KFold #to split the data
 from sklearn.ensemble import RandomForestClassifier #RnadomForest
 from sklearn.datasets import make_classification #For randomForests
 from sklearn.linear_model import LogisticRegression #For Classifier fussion
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import VotingClassifier
+from sklearn.naive_bayes import GaussianNB # For classifier fussion
+from sklearn.ensemble import VotingClassifier  #For classifier fussion.
 
 from sklearn.utils import shuffle #To shuffle the data when we merge the three subsets.
 
@@ -169,6 +170,8 @@ def plotConfusionMatrix(y_predict, y_test):
     plt.figure(num=None, figsize=(8, 8), dpi=100, facecolor='w', edgecolor='k')
     labels = [1, 0]
     cm = confusion_matrix(y_test, y_predict, labels)
+    print(cm)
+    print(type(cm))
     fig = plt.figure()
     ax = fig.add_subplot(111)
     cax = ax.matshow(cm)
@@ -309,6 +312,36 @@ def gaussianPriorProbsAnalysis(data, bow = True):
     #plt.show()
 
 
+def showConfusionMatrix(data, classifierClass):
+    X, Y = readData(data)  # one dataset at the time
+    labels = [1, 0]
+
+    #X = TF_IDF(X)
+
+    print("BOW")
+    X = BoW(X)
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+
+    classifier = classifierClass
+    classifier.fit(X_train,y_train)
+    y_predict=classifier.predict(X_test)
+    cm = confusion_matrix(y_test, y_predict, labels)
+    #Output is in this format: tn, fp, fn, tp
+    print(cm)
+    print(" ")
+    print("TFIDF")
+    X, Y = readData(data)  # one dataset at the time
+    X = TF_IDF(X)
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+    classifier = classifierClass
+    classifier.fit(X_train, y_train)
+    y_predict = classifier.predict(X_test)
+    cm = confusion_matrix(y_test, y_predict)
+    # Output is in this format: tn, fp, fn, tp
+    print(cm)
+
+
+
 ###########################################################################
 ####################### Main Starts Here  #################################
 ###########################################################################
@@ -361,6 +394,31 @@ def main():
     X_train, X_test, y_train, y_test = splitData(X, Y)
     NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
     '''
+
+    '''
+    #This code runs KNN
+
+    X,Y = readData(yelp) # one dataset at the time
+    #X, Y = mergeDatasets(data) #all three combined
+    X = TF_IDF(X)
+    X_train, X_test, y_train, y_test = splitData(X, Y)
+    k_means = Kmeans()
+    k_means.fit(X_train , y_train, iterationsLimit= 1000)
+    y_predict = k_means.predict(y_test)
+    print(accuracy_score(y_test, y_predict))
+    '''
+
+    #showConfusionMatrix(amazon, svm.SVC(gamma='scale'))
+    #showConfusionMatrix(amazon, MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,5), random_state=1))
+    #showConfusionMatrix(amazon, RandomForestClassifier( random_state=0))
+    '''
+    clf1 = LogisticRegression(random_state=1)
+    clf2 = RandomForestClassifier(n_estimators=50, random_state=1)
+    clf3 = GaussianNB()
+    showConfusionMatrix(amazon,  VotingClassifier(estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)], voting='hard'))
+    '''
+    showConfusionMatrix(amazon,  mpp())
+
 
 
 
