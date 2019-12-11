@@ -1,7 +1,3 @@
-'''
-Created by Kevin De Angeli
-Date: 2019-12-02
-'''
 
 import numpy as np
 from Distances import *
