@@ -127,9 +127,14 @@ def knn(nXtrain, nXtest, y_train, y_test, k):
 
     #    print('kNN Accuracy: ' , Acc)
     #    print('TPR,TNR',TPR,TNR)
-    print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
-    print('K:',k,'Accuracy:' , Acc)
-    print('sensitivity,specificity',TPR,TNR)
+    
+    '''
+#    print('CM: TN, FP, FN, TP = ', TN, FP, FN, TP)
+#    print('K:',k,'Accuracy:' , Acc)
+#    print('sensitivity,specificity',TPR,TNR)
+    '''
+    print(TPR,FPR)
+
 
 #    if (A0 == 1 and A1 == 1):
 #       if k == 1:

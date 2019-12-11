@@ -340,11 +340,14 @@ def gaussianPriorProbsAnalysis(data, bow = True):
 
     #plt.show()
 
-def knnStudy(dat, X,Y, merged=False):
+def knnStudy(dat, X, Y, ks, ke, merged=False):
         Xv1 = BoW(X)
         Xv2 = TF_IDF(X)
         featEx = [Xv1, Xv2, 'BoW', 'TF_IDF']
         count = 1
+        
+        print('TPR', 'FPR')
+
         for Xv in featEx[0:2]:
             count += 1
             X_train, X_test, y_train, y_test = splitData(Xv, Y)
@@ -352,19 +355,24 @@ def knnStudy(dat, X,Y, merged=False):
 #            accBPNN = BPNN(X_train, X_test, y_train, y_test)
 #            accDT = DecisionTree(X_train, X_test, y_train, y_test)
             
+            if merged == False:
+                print('Data:', dat, '\nFeature Extraction:', featEx[count],"\n")
+            else:
+                print('Data: Merged Data ', '\nFeature Extraction:', featEx[count], '\nKNN', "\n")
             
-            for k in range(1,10):
+
+            for k in range(ks,ke+1):
 
                 start = time.time()
-
+                
                 Acc, TPR, TNR = knn(X_train, X_test, y_train, y_test, k)
 
                 end = time.time()
 
-                if merged == False:
-                    print('Data:', dat, '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
-                else:
-                    print('Data: Merged Data ', '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
+#                if merged == False:
+#                    print('Data:', dat, '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
+#                else:
+#                    print('Data: Merged Data ', '\nFeature Extraction:', featEx[count], '\nKNN', 'Time = ', end - start, 'seconds', "\n")
 
 ###########################################################################
 ####################### Main Starts Here  #################################
@@ -418,15 +426,16 @@ def main():
 #    X_train, X_test, y_train, y_test = splitData(X, Y)
 #    NeuronsVSLayersVsAccuracy3D(X_train, X_test, y_train, y_test)
 
-    
+    kstart  = 1
+    kend    = 10
     # KNN individual data
     for dat in data:
         X, Y = readData(dat)
-        knnStudy(dat, X, Y)
+        knnStudy(dat, X, Y, kstart, kend)
     
     # KNN merged data
     X, Y = mergeDatasets(data)
-    knnStudy('ignore', X, Y, True)
+    knnStudy('ignore', X, Y, kstart, kend, True)
 
 
 
